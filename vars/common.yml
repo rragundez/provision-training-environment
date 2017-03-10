@@ -1,0 +1,5 @@
+spark_home: /var/lib/spark
+deployer: deploy
+notebooks_folder: /tmp/notebooks
+users:
+  - me

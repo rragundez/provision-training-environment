@@ -1,0 +1,161 @@
+- name: install packages
+  become: true
+  become_user: root
+  apt: name={{item}} state=installed #update_cache=yes
+  with_items:
+    - python3-dev
+    - python3-pip
+    - build-essential
+    - libfreetype6-dev
+    - blt-dev
+    - pkg-config
+    - llvm-3.8-dev
+    - libssl1.0.0
+    - sudo
+
+- name: Add aliases to file
+  lineinfile: dest="~/.bashrc" line="alias ll='ls -Alh'"
+
+- name: place requirements
+  template: src=requirements.txt dest=/tmp
+
+- name: remove notebooks folder
+  become: true
+  become_user: root
+  file:
+    state: absent
+    path: "{{ notebooks_folder }}"
+
+- name: Creates notebooks folder directory
+  file:
+      path: "{{ notebooks_folder }}"
+      state: directory
+
+- name: Check that the main user exists
+  stat:
+    path: /home/{{ deployer }}
+  register: user_home
+
+- name: Make sure we have a 'wheel' group
+  group:
+    name: wheel
+    state: present
+  when: user_home.stat.exists == False
+
+- name: Allow 'wheel' group to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+  when: user_home.stat.exists == False
+
+- name: Add sudoers deployer to wheel group
+  user: name="{{ deployer }}" groups=wheel append=yes state=present createhome=yes
+  when: user_home.stat.exists == False
+
+- name: place notebooks
+  copy:
+    src: "{{ item }}"
+    dest: "{{ notebooks_folder }}"
+    owner: "{{ deployer }}"
+    mode: 0777
+  with_fileglob:
+    - files/notebooks/*
+
+- name: mkdir jupyter for every user
+  become: true
+  become_user: root
+  file: path=/home/{{ item }}/.jupyter state=directory owner={{ item }} group={{ item }} mode=0755
+  with_items: "{{ users }}"
+
+- name: place jupyter file for every user
+  become: true
+  become_user: root
+  template: src=jupyter_notebook_config.py dest=/home/{{ item }}/.jupyter owner={{ item }}
+  with_items: "{{ users }}"
+
+- name: mkdirs for every user
+  become: true
+  become_user: root
+  file: path={{notebooks_folder}}/{{ item }} state=directory owner={{ item }} group={{ item }} mode=0700
+  with_items: "{{ users }}"
+
+- name: copy notebooks for every user
+  become: true
+  become_user: root
+  shell: /bin/cp -R {{ notebooks_folder }}/*.ipynb {{ notebooks_folder }}/{{ item }}
+  with_items: "{{ users }}"
+
+- name: set ownership for notebooks
+  become: true
+  become_user: root
+  shell: /bin/chown -R {{ item }}:{{ item }} {{ notebooks_folder }}/{{ item }}
+  with_items: "{{ users }}"
+
+- name: update setuptools
+  become: true
+  become_user: root
+  pip:
+    name: setuptools
+    state: latest
+    executable: pip3
+
+- name: install python dependencies
+  become: true
+  become_user: root
+  pip:
+    requirements: /tmp/requirements.txt
+    executable: pip3
+
+- name: Check that Spark conf is present
+  stat:
+    path: /usr/lib/spark/conf
+  register: spark_conf
+
+- name: place spark defaults
+  become: true
+  become_user: root
+  template: src=spark-defaults.conf dest=/tmp/spark-defaults.conf
+  when: spark_conf.stat.exists == True
+
+- name: set ownership for notebooks
+  become: true
+  become_user: root
+  shell: cat /tmp/spark-defaults.conf
+  register: data
+  when: spark_conf.stat.exists == True
+
+
+- name: insert/update configuration using a local file
+  become: true
+  become_user: root
+  blockinfile:
+    dest: "/usr/lib/spark/conf/spark-defaults.conf"
+    block: |
+      {{ data.stdout }}
+  when: spark_conf.stat.exists == True
+
+- name: replace number of executors
+  become: true
+  become_user: root
+  lineinfile:
+     dest: "/usr/lib/spark/conf/spark-defaults.conf"
+     regexp: 'spark\.executor\.instances'
+     line: 'spark.executor.instances 2'
+  when: spark_conf.stat.exists == True
+
+- name: replace number of dynamic executors
+  become: true
+  become_user: root
+  lineinfile:
+     dest: "/usr/lib/spark/conf/spark-defaults.conf"
+     regexp: 'dynamicAllocation\.maxExecutors'
+     line: 'spark.dynamicAllocation.maxExecutors 2'
+  when: spark_conf.stat.exists == True
+
+- name: set SPARK_HOME
+  become: true
+  become_user: root
+  lineinfile: dest=/etc/profile regexp="^export SPARK_HOME=" line="export SPARK_HOME=/usr/lib/spark"
+  when: spark_conf.stat.exists == True
