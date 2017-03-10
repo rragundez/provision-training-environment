@@ -38,7 +38,7 @@ have sudo privileges anyway, that doesn't really matter.
 
 ## Testing
 
-If you have docker, be sure to have `localhost` as master in your `var/common.yml`. Then
+If you have docker, be sure to have `localhost` as master in your `hosts`. Then
 
 ```
 docker build -t gcloud_ansible .
