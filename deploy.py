@@ -34,10 +34,10 @@ def write_users(yml, key, key_path):
             f.write(''.join([user, ':', key]))
 
 
-def add_keys_to(instance_tag, key_path):
+def add_keys_to(instance_tag, key_path, zone):
     # TODO This method could be optional
     delegator.run(("gcloud compute instances add-metadata %s "
-                   "--metadata-from-file sshKeys=%s") % (instance_tag, key_path))
+                   "--zone=%s --metadata-from-file sshKeys=%s") % (instance_tag, zone, key_path))
 
 
 def get_ip_of(instance_tag):
@@ -46,6 +46,12 @@ def get_ip_of(instance_tag):
                        'compute instances list %s') % instance_tag)
     external_ip = c.out.strip()
     return external_ip
+
+def zone_of(instance_tag):
+    c = delegator.run(('gcloud --format="value(zone)" '
+                       'compute instances list %s') % instance_tag)
+    zone = c.out.strip()
+    return zone
 
 
 def write_ip_to(hosts_path, external_ip):
@@ -69,7 +75,8 @@ def main(instance_tag):
     yml = load_yml(yaml_path)
     key = load_key(key_path)
     write_users(yml, key, keys_path)
-    add_keys_to(instance_tag, keys_path)
+    zone = zone_of(instance_tag)
+    add_keys_to(instance_tag, keys_path, zone)
     external_ip = get_ip_of(instance_tag)
     write_ip_to(hosts_path, external_ip)
 
