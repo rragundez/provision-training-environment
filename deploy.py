@@ -47,6 +47,7 @@ def get_ip_of(instance_tag):
     external_ip = c.out.strip()
     return external_ip
 
+
 def zone_of(instance_tag):
     c = delegator.run(('gcloud --format="value(zone)" '
                        'compute instances list %s') % instance_tag)
