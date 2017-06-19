@@ -46,6 +46,7 @@ source provision_env/bin/activate
 git clone https://github.com/kennethreitz/delegator.py
 cd delegator.py && pip install delegator.py
 pip install pyyaml
+pip install ansible
 cd .. && rm -rf delegator.py
 python deploy.py $VM
 ansible-playbook -i hosts --private-key gcloud_ansible playbook.yml
