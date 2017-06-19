@@ -6,11 +6,16 @@ training.
 We are currently in the process of making it grow to become more robust and serve more targets
 (possibly with Anaconda installed).
 
+## Prerequisites
+
+You need to have the gcloud CLI installed. You need to authenticated and to have chosen the correct
+Google Cloud project (`gcloud config set project <project_name>`).
+
 ## Usage
 
 Once you have create your cluster, you need three things:
 
-- The master name (f.e. `cluster-1-m`);
+- The VM name (f.e. `cluster-1-m`);
 - The list of users (put them into `var/common.yml`, under `users`);
 - The notebooks you want to upload stored in `roles/bootstrap/files/notebooks`.
 
