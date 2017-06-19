@@ -75,20 +75,6 @@
   with_fileglob:
     - files/notebooks/*
 
-- name: mkdir images_folder
-  become: true
-  become_user: root
-  file: path={{ images_folder }} state=directory owner={{ deployer }} mode=0777
-
-- name: place images
-  copy:
-    src: "{{ item }}"
-    dest: "{{ images_folder }}"
-    owner: "{{ deployer }}"
-    mode: 0777
-  with_fileglob:
-    - files/notebooks/images/*
-
 - name: mkdir jupyter for every user
   become: true
   become_user: root
@@ -107,39 +93,17 @@
   file: path={{notebooks_folder}}/{{ item }} state=directory owner={{ item }} group={{ item }} mode=0700
   with_items: "{{ users }}"
 
-- name: mkdirs images for every user
-  become: true
-  become_user: root
-  file: path={{notebooks_folder}}/{{ item }}/images state=directory owner={{ item }} group={{ item }} mode=0700
-  with_items: "{{ users }}"
-
 - name: copy notebooks for every user
   become: true
   become_user: root
   shell: /bin/cp -R {{ notebooks_tmp_folder }}/* {{ notebooks_folder }}/{{ item }}
   with_items: "{{ users }}"
 
-
 - name: set ownership for notebooks
   become: true
   become_user: root
   shell: /bin/chown -R {{ item }}:{{ item }} {{ notebooks_folder }}/{{ item }}
   with_items: "{{ users }}"
-
-# - name: update setuptools
-#   become: true
-#   become_user: root
-#   pip:
-#     name: setuptools
-#     state: latest
-#     executable: pip3
-
-# - name: install python dependencies
-#   become: true
-#   become_user: root
-#   pip:
-#     requirements: /tmp/requirements.txt
-#     executable: pip3
 
 - name: copy conda installer
   become: true
