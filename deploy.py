@@ -10,6 +10,9 @@ KEYS_PATH = 'keys'
 YAML_PATH = "vars/common.yml"
 HOSTS_PATH = 'hosts'
 
+class GCloudError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
 
 def create_key_pair(key_path):
     if not os.path.isfile(key_path):
@@ -39,12 +42,19 @@ def add_keys_to(instance_tag, key_path, zone):
     delegator.run(("gcloud compute instances add-metadata %s "
                    "--zone=%s --metadata-from-file sshKeys=%s") % (instance_tag, zone, key_path))
 
-
 def get_ip_of(instance_tag):
     # TODO This method could be optional
     c = delegator.run(('gcloud --format="value(networkInterfaces[0].accessConfigs[0].natIP)" '
                        'compute instances list %s') % instance_tag)
     external_ip = c.out.strip()
+    if c.err:
+        raise GCloudError(c.err)
+    elif not external_ip:
+        raise GCloudError("No external ip found for instance {}"
+                          .format(instance_tag))
+    
+    print("external ip found for instance {}: {}"
+          .format(instance_tag, external_ip))
     return external_ip
 
 
