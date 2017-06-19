@@ -9,7 +9,16 @@ We are currently in the process of making it grow to become more robust and serv
 ## Prerequisites
 
 You need to have the gcloud CLI installed. You need to authenticated and to have chosen the correct
-Google Cloud project (`gcloud config set project <project_name>`).
+Google Cloud project (`gcloud config set project <project_id>`). Make sure to use the `project_id` and not the `project_name`.
+
+You need to install the `delegator` package https://github.com/kennethreitz/delegator.py 
+Note: 2017-06-19 `pip install delegator` did not work for me, installs version 0.0.3
+
+You need to install `pyyaml`. `pip install pyyaml`
+Note: 2017-06-19 `pip install yaml` installation works but breaks when running the code.
+
+You need to install ansible
+Note: 2017-06-19 in Ubuntu `sudo apt-get install ansible`
 
 ## Usage
 
@@ -22,16 +31,18 @@ Once you have create your cluster, you need three things:
 Then execute
 
 ```
-python deploy.py `cluster-1-m`
+python deploy.py <vm_name>
 ansible-playbook -i hosts --private-key gcloud_ansible playbook.yml
 ```
 
 You should be good to go now!
 
 ```
-ssh -i gcloud_ansible -L <port>:localhost:<port> <my_user>@<master_external_ip>
+ssh -i gcloud_ansible -o IdentitiesOnly=yes -L <port>:localhost:<port> <my_user>@<master_external_ip>
 jupyter notebook --port <port>
 ```
+
+The `master_external_ip` can be found in the `hosts` file.
 
 Distribute the key to your users, and they should also be able to log in.
 
