@@ -41,12 +41,9 @@ if $NOTEBOOK_DIR; then
   cp -a $NOTEBOOKS_DIR roles/bootstrap/files/notebooks
 fi
 
+sudo pip install virtualenv
 virtualenv provision_env -p $PYTHON
 source provision_env/bin/activate
-git clone https://github.com/kennethreitz/delegator.py
-cd delegator.py && pip install delegator.py
-pip install pyyaml
-pip install ansible
-cd .. && rm -rf delegator.py
+pip install delegator.py pyyaml ansible
 python deploy.py $VM
 ansible-playbook -i hosts --private-key gcloud_ansible playbook.yml
