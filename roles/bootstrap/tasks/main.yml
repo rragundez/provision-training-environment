@@ -68,12 +68,10 @@
 
 - name: place notebooks
   copy:
-    src: "{{ item }}"
+    src: files/notebooks/
     dest: "{{ notebooks_tmp_folder }}"
     owner: "{{ deployer }}"
     mode: 0777
-  with_fileglob:
-    - files/notebooks/*
 
 - name: mkdir images_folder
   become: true
