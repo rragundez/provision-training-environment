@@ -49,9 +49,9 @@ if [[ $ENVIRONMENT_FILE_PATH ]]; then
 fi
 
 
-# sudo pip install virtualenv
-# virtualenv provision_env -p $PYTHON
-# source provision_env/bin/activate
-# pip install delegator.py pyyaml ansible
-# python deploy.py $VM
-# ansible-playbook -i hosts --private-key gcloud_ansible playbook.yml
+sudo pip install virtualenv
+virtualenv provision_env -p $PYTHON
+source provision_env/bin/activate
+pip install delegator.py pyyaml ansible
+python deploy.py $VM
+ansible-playbook -i hosts --private-key gcloud_ansible playbook.yml
