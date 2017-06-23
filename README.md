@@ -1,10 +1,8 @@
 # Provision training environment
 
-This is the repository to provision the training environment for the Data Science with Spark
-training.
+This is the repository to provision a training environment in Google cloud.
 
-We are currently in the process of making it grow to become more robust and serve more targets
-(possibly with Anaconda installed).
+We are currently in the process of making it grow to become more robust and serve more targets. The environment is delivered with anaconda and extra packages defined in the `/roles/bootstrap/templates/environment.yml`.
 
 ## Prerequisites
 
@@ -16,28 +14,29 @@ Once you have create your cluster, you need three things:
 
  - The Google cloud `project_id`, not to be confused with `project_name`
  - The `vm_instance_name` (f.e. `cluster-1-m`)
- - The list of users (put them into `var/common.yml`, under `users`);
+ - The list of users (put them into `vars/common.yml`, under `users`);
 
-Optional add-ons:
+Important but optional add-ons:
+ - The path to a `environment.yml` file that you want to add to anaconda (`env_file`)
  - Your local non-anaconda python path (`python_path`). Defaults to `/usr/bin/python3`
  - The notebooks directory you want to upload to the vm and make available to each user (`local_notebooks_dir`)
 
-Then execute
+Then from the root directory of this repository execute
 
 ```
 bash provide.sh -i <project_id> -v <vm_instance_name>
 ```
 
-or with the optional add-ons:
+or with the optional add-ons
 
 ```
-bash provide.sh -i <project_id> -v <vm_instance_name> -p <python_path> -n <local_notebooks_dir>
+bash provide.sh -i <project_id> -v <vm_instance_name> -p <python_path> -e <env_file> -n <local_notebooks_dir>
 ```
 
 You should be good to go now! check you can ssh to it by:
 
 ```
-ssh -i gcloud_ansible -o IdentitiesOnly=yes -L deploy@<master_external_ip>
+ssh -i gcloud_ansible -o IdentitiesOnly=yes deploy@<master_external_ip>
 ```
 
 The `master_external_ip` can be found in the `hosts` file.
