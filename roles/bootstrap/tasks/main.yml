@@ -16,8 +16,8 @@
 - name: Add aliases to file
   lineinfile: dest="~/.bashrc" line="alias ll='ls -Alh'"
 
-- name: place requirements
-  template: src=requirements.txt dest=/tmp
+- name: place environment file
+  template: src=environment.yml dest=/tmp
 
 - name: remove notebooks folder
   become: true
