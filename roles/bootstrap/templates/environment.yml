@@ -1,0 +1,10 @@
+name: example
+channels:
+- conda-forge
+- defaults
+dependencies:
+- seaborn=0.7.1
+- pip:
+  - findspark=1.0.0
+prefix: /some/path
+
