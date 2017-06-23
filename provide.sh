@@ -9,21 +9,21 @@ where:
     -h  show this help text
     -i  google cloud project id
     -v  name of instance/virtual machine
-    -p  python path
-    -d  if want to copy a notebooks directory"
+    -p  non-anaconda python path [default '/usr/bin/python3']
+    -n  notebooks directory to include in the VM"
 
 # constants
 PYTHON=/usr/bin/python3
 NOTEBOOK_DIR=false
 
-options=':hi:v:p:d:'
+options=':hi:v:p:n:'
 while getopts $options option; do
   case "$option" in
     h) echo "$usage"; exit;;
     i) PROJECT=$OPTARG;;
     v) VM=$OPTARG;;
     p) PYTHON=$OPTARG;;
-    d) NOTEBOOK_DIR=$OPTARG;;
+    n) NOTEBOOK_DIR=$OPTARG;;
     :) printf "missing argument for -%s\n" "$OPTARG" >&2; echo "$usage" >&2; exit 1;;
    \?) printf "illegal option: -%s\n" "$OPTARG" >&2; echo "$usage" >&2; exit 1;;
   esac
