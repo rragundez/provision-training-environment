@@ -5,3 +5,4 @@ if [ ! -d "/anaconda" ]; then
 fi
 
 /anaconda/bin/conda update conda
+/anaconda/bin/conda install -y nb_conda
