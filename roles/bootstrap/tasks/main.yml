@@ -110,54 +110,15 @@
   become_user: root
   shell: sh /tmp/install_conda.sh
 
-- name: Check that Spark conf is present
-  stat:
-    path: /usr/lib/spark/conf
-  register: spark_conf
-
-- name: place spark defaults
+- name: install screen
   become: true
   become_user: root
-  template: src=spark-defaults.conf dest=/tmp/spark-defaults.conf
-  when: spark_conf.stat.exists == True
+  shell: apt-get -y update && apt-get -y install screen
 
-- name: set ownership for notebooks
+- name: start jupyter in screen for each user
   become: true
-  become_user: root
-  shell: cat /tmp/spark-defaults.conf
-  register: data
-  when: spark_conf.stat.exists == True
-
-
-- name: insert/update configuration using a local file
-  become: true
-  become_user: root
-  blockinfile:
-    dest: "/usr/lib/spark/conf/spark-defaults.conf"
-    block: |
-      {{ data.stdout }}
-  when: spark_conf.stat.exists == True
-
-- name: replace number of executors
-  become: true
-  become_user: root
-  lineinfile:
-     dest: "/usr/lib/spark/conf/spark-defaults.conf"
-     regexp: 'spark\.executor\.instances'
-     line: 'spark.executor.instances 2'
-  when: spark_conf.stat.exists == True
-
-- name: replace number of dynamic executors
-  become: true
-  become_user: root
-  lineinfile:
-     dest: "/usr/lib/spark/conf/spark-defaults.conf"
-     regexp: 'dynamicAllocation\.maxExecutors'
-     line: 'spark.dynamicAllocation.maxExecutors 2'
-  when: spark_conf.stat.exists == True
-
-- name: set SPARK_HOME
-  become: true
-  become_user: root
-  lineinfile: dest=/etc/profile regexp="^export SPARK_HOME=" line="export SPARK_HOME=/usr/lib/spark"
-  when: spark_conf.stat.exists == True
+  become_user: "{{ item.0 }}"
+  shell: screen -dmS jupyter /anaconda/bin/jupyter-notebook --port {{ item.1 }} && sleep 1
+  with_together:
+        - "{{ users }}"
+        - "{{ ports }}"
