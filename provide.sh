@@ -35,13 +35,7 @@ if [ ! "$PROJECT" ] || [ ! "$VM" ]; then
   echo "$usage" >&2; exit 1
 fi
 
-# gcloud config set project $PROJECT
-
-# if copying notebooks to the instance
-if [[ $NOTEBOOKS_DIR ]]; then
-  echo "Copying notebooks directory '${NOTEBOOKS_DIR}'"
-  cp -r "$NOTEBOOKS_DIR"/* roles/bootstrap/files/notebooks
-fi
+gcloud config set project $PROJECT
 
 if [[ $ENVIRONMENT_FILE_PATH ]]; then
   echo "Copying envrionment file '${ENVIRONMENT_FILE_PATH}'"
@@ -54,4 +48,19 @@ virtualenv provision_env -p $PYTHON
 source provision_env/bin/activate
 pip install delegator.py pyyaml ansible
 python deploy.py $VM
+
+# if copying notebooks to the instance
+# for some reason ansible takes hours to copy them
+# here we use SCP directly
+if [[ $NOTEBOOKS_DIR ]]; then
+  echo "Getting the IP"
+  IP=$(gcloud --format="value(networkInterfaces[0].accessConfigs[0].natIP)" compute instances list "$VM")
+  echo "Deleting the notebooks_tmp direcotry"
+  ssh -i gcloud_ansible -o IdentitiesOnly=yes deploy@"$IP" 'rm -rf /tmp/notebooks_tmp'
+  echo "Creating the notebooks_tmp direcotry"
+  ssh -i gcloud_ansible -o IdentitiesOnly=yes deploy@"$IP" 'mkdir -p /tmp/notebooks_tmp'
+  echo "Copying notebooks directory '${NOTEBOOKS_DIR}' to the VM"
+  scp -i gcloud_ansible -o IdentitiesOnly=yes -r "$NOTEBOOKS_DIR"/* deploy@"$IP":/tmp/notebooks_tmp
+fi
+
 ansible-playbook -i hosts --private-key gcloud_ansible playbook.yml
